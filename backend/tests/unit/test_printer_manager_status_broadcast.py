@@ -50,15 +50,55 @@ def _close_unawaited(coro):
 
 
 def _fake_state(**overrides):
-    """Minimal stand-in for a ``PrinterState`` — only the attributes
-    ``printer_state_to_dict`` reads. We use a SimpleNamespace rather than
-    constructing a real PrinterState so this test stays fast and doesn't
-    couple to the (large, evolving) PrinterState dataclass shape."""
+    """Stand-in for a ``PrinterState``.
+
+    The tests below patch ``printer_state_to_dict`` so the fake doesn't need
+    to satisfy every attribute access — but the patch was observed to race on
+    parallel CI runners (pytest-xdist), and when it didn't catch the call the
+    real ``printer_state_to_dict`` ran against this fake and ``AttributeError``'d
+    on ``.kprofiles``. The fake now carries every attribute the real function
+    reads, so it remains correct even if the patch is somehow bypassed — the
+    test no longer depends on a fragile monkeypatch landing in time.
+
+    Iterables (``kprofiles``, ``printable_objects``, ``hms_errors``,
+    ``temperatures``, etc.) default to empty so the function's loops are
+    no-ops; scalars default to ``None`` so any "if state.x is None" guard
+    falls through cleanly.
+    """
     base = {
+        # State the existing test bodies explicitly set / read
         "connected": True,
         "state": "FINISH",
         "raw_data": {},
         "progress": 100.0,
+        # Iterables — must be iterable for the loops inside printer_state_to_dict
+        "kprofiles": [],
+        "printable_objects": [],
+        "hms_errors": [],
+        "temperatures": {},
+        "nozzle_rack": [],
+        # Nullable scalars — printer_state_to_dict tolerates None for these
+        "active_extruder": None,
+        "ams_status_main": None,
+        "ams_status_sub": None,
+        "big_fan1_speed": None,
+        "big_fan2_speed": None,
+        "chamber_light": None,
+        "cooling_fan_speed": None,
+        "current_print": None,
+        "door_open": None,
+        "firmware_version": None,
+        "gcode_file": None,
+        "heatbreak_fan_speed": None,
+        "layer_num": None,
+        "remaining_time": None,
+        "speed_level": None,
+        "stg_cur": 0,  # get_derived_status_name does ``0 <= state.stg_cur < 255``
+        "subtask_name": None,
+        "total_layers": None,
+        "tray_now": None,
+        "wifi_signal": None,
+        "wired_network": None,
     }
     base.update(overrides)
     return SimpleNamespace(**base)
