@@ -67,6 +67,17 @@ def _get_fallback_spool_tag(printer_serial: str, global_tray_id: int) -> str:
     if not printer_serial:
         return ""
     ams_id, tray_id = _global_tray_id_to_ams_slot(global_tray_id)
+    return get_fallback_spool_tag_for_slot(printer_serial, ams_id, tray_id)
+
+
+def get_fallback_spool_tag_for_slot(printer_serial: str, ams_id: int, tray_id: int) -> str:
+    """Public helper matching frontend getFallbackSpoolTag(serial, amsId, trayId).
+
+    Used by stale-tag cleanup (#1457) to detect Spoolman spools still holding
+    this slot's deterministic fallback tag in extra.tag.
+    """
+    if not printer_serial:
+        return ""
     return f"{_hash_serial_to_hex32(printer_serial)}{_to_fixed_hex(ams_id, 4)}{_to_fixed_hex(tray_id, 4)}"
 
 
