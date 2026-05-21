@@ -5454,6 +5454,63 @@ export default {
     },
   },
 
+  diagnostic: {
+    modalTitle: 'Diagnóstico de conexão — {{name}}',
+    running: 'Executando diagnóstico...',
+    runFailed: 'Não foi possível executar o diagnóstico: {{error}}',
+    retry: 'Executar novamente',
+    runButton: 'Executar diagnóstico',
+    sectionTitle: 'Diagnóstico de conexão',
+    sectionDescription: 'Verifique por que uma impressora não conecta ou não imprime — acessibilidade das portas, modo desenvolvedor LAN, modo de rede Docker e credenciais.',
+    noPrinters: 'Nenhuma impressora configurada.',
+    overall: {
+      ok: 'Nenhum problema encontrado — a conexão da impressora parece saudável.',
+      warnings: 'A impressora deve funcionar, mas alguns pontos exigem atenção.',
+      problems: 'Foram encontrados problemas que explicam por que a impressora não conecta ou não imprime.',
+    },
+    check: {
+      port_mqtt: {
+        title: 'Porta de controle (MQTT 8883)',
+        pass: 'Acessível — a impressora está aceitando conexões de controle.',
+        fail: 'A porta 8883 está inacessível. A impressora está desligada, em outro endereço IP, ou um firewall está bloqueando. Verifique o IP da impressora e se nada bloqueia a porta 8883.',
+      },
+      port_ftps: {
+        title: 'Porta de transferência de arquivos (FTPS 990)',
+        pass: 'Acessível — o envio de arquivos de impressão funcionará.',
+        warn: 'A porta 990 está inacessível. O monitoramento ainda pode funcionar, mas o envio de impressões para a impressora falhará. Verifique se a porta 990 não está bloqueada.',
+      },
+      port_rtsps: {
+        title: 'Porta da câmera (RTSPS 322)',
+        pass: 'Acessível — o streaming da câmera funcionará.',
+        warn: 'A porta 322 está inacessível. A visualização ao vivo da câmera não funcionará. Isso não afeta a impressão.',
+      },
+      network_mode: {
+        title: 'Modo de rede Docker',
+        pass: 'Executando no modo de rede host.',
+        warn: 'O Bambuddy está sendo executado em rede Docker bridge. A descoberta de impressoras e a impressora virtual precisam do modo de rede host — recrie o contêiner com "network_mode: host".',
+        skip: 'Não está sendo executado no Docker — não aplicável.',
+      },
+      subnet: {
+        title: 'Sub-rede',
+        pass: 'A impressora e o Bambuddy estão na mesma sub-rede.',
+        warn: 'A impressora ({{printer_ip}}) e o Bambuddy ({{host_ip}}) estão em sub-redes diferentes. Eles podem não se alcançar, a menos que o roteamento entre as sub-redes esteja configurado.',
+        skip: 'Não foi possível determinar a sub-rede — ignorado.',
+      },
+      mqtt_auth: {
+        title: 'Credenciais da impressora',
+        pass: 'A impressora aceitou a conexão.',
+        fail: 'A impressora está acessível mas recusou a conexão. O código de acesso ou o número de série provavelmente está incorreto. O código de acesso muda toda vez que o Modo Desenvolvedor é alternado — copie-o novamente da tela da impressora.',
+        skip: 'Não verificado — não foi possível alcançar a impressora.',
+      },
+      developer_mode: {
+        title: 'Modo Desenvolvedor LAN',
+        pass: 'O Modo Desenvolvedor está ativado.',
+        fail: 'O Modo Desenvolvedor está DESLIGADO na impressora. Ative-o nas configurações de LAN da impressora — e confirme com OK. Sem ele, as impressões não iniciarão.',
+        skip: 'Não foi possível verificar — requer uma conexão ativa com a impressora.',
+      },
+    },
+  },
+
   bugReport: {
     title: 'Reportar um bug',
     description: 'Descrição',
@@ -5479,6 +5536,10 @@ export default {
     submitting: 'Enviando relatório de bug...',
     submitSuccess: 'Relatório de bug enviado com sucesso!',
     submitFailed: 'Falha ao enviar relatório de bug',
+    diagnosticChecking: 'Verificando as conexões das impressoras...',
+    diagnosticHealthy: 'Verificação de conexão aprovada — nenhum problema encontrado nas suas impressoras.',
+    diagnosticHeading: 'Possível problema de configuração detectado',
+    diagnosticIntro: 'Uma impressora tem um problema de conexão que pode estar causando seu problema. Confira a solução abaixo — resolvê-la pode solucionar o problema sem um relatório de bug. Você ainda pode enviar um relatório abaixo.',
     thankYou: 'Obrigado!',
     submitted: 'Seu relatório de bug foi enviado.',
     viewIssue: 'Ver issue',

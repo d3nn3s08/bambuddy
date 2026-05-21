@@ -188,6 +188,31 @@ export interface CameraDiagnoseResult {
   summary_code: string;
 }
 
+// Connection diagnostic (GET /printers/{id}/diagnostic and
+// POST /printers/diagnostic). Each check's `id` + `status` resolve a
+// localized title/fix under `diagnostic.check.*`; `params` interpolate it.
+export type DiagnosticStatus = 'pass' | 'fail' | 'warn' | 'skip';
+
+export interface DiagnosticCheck {
+  id:
+    | 'port_mqtt'
+    | 'port_ftps'
+    | 'port_rtsps'
+    | 'network_mode'
+    | 'subnet'
+    | 'mqtt_auth'
+    | 'developer_mode';
+  status: DiagnosticStatus;
+  params: Record<string, string | number>;
+}
+
+export interface PrinterDiagnosticResult {
+  printer_id: number | null;
+  ip_address: string;
+  overall: 'ok' | 'warnings' | 'problems';
+  checks: DiagnosticCheck[];
+}
+
 // Long-lived camera-stream tokens (#1108). The `token` field is populated
 // only on the create response — listing endpoints set it to null because
 // the plaintext value is shown to the user exactly once.
@@ -5013,6 +5038,17 @@ export const api = {
     request<{ active: boolean; stalled: boolean }>(`/printers/${printerId}/camera/status`),
   diagnoseCamera: (printerId: number) =>
     request<CameraDiagnoseResult>(`/printers/${printerId}/camera/diagnose`, { method: 'POST' }),
+  diagnosePrinter: (printerId: number) =>
+    request<PrinterDiagnosticResult>(`/printers/${printerId}/diagnostic`),
+  diagnoseConnection: (body: {
+    ip_address: string;
+    serial_number?: string;
+    access_code?: string;
+  }) =>
+    request<PrinterDiagnosticResult>('/printers/diagnostic', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
 
   // Plate Detection - Multi-reference calibration (stores up to 5 references per printer)
   checkPlateEmpty: (printerId: number, options?: { useExternal?: boolean; includeDebugImage?: boolean }) => {

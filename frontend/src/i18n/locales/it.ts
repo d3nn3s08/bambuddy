@@ -5454,6 +5454,63 @@ export default {
     },
   },
 
+  diagnostic: {
+    modalTitle: 'Diagnostica connessione — {{name}}',
+    running: 'Diagnostica in corso...',
+    runFailed: 'Impossibile eseguire la diagnostica: {{error}}',
+    retry: 'Esegui di nuovo',
+    runButton: 'Esegui diagnostica',
+    sectionTitle: 'Diagnostica connessione',
+    sectionDescription: 'Verifica perché una stampante non si connette o non stampa — raggiungibilità delle porte, modalità sviluppatore LAN, modalità di rete Docker e credenziali.',
+    noPrinters: 'Nessuna stampante configurata.',
+    overall: {
+      ok: 'Nessun problema rilevato — la connessione della stampante sembra a posto.',
+      warnings: 'La stampante dovrebbe funzionare, ma alcuni aspetti richiedono attenzione.',
+      problems: 'Sono stati rilevati problemi che spiegano perché la stampante non si connette o non stampa.',
+    },
+    check: {
+      port_mqtt: {
+        title: 'Porta di controllo (MQTT 8883)',
+        pass: 'Raggiungibile — la stampante accetta connessioni di controllo.',
+        fail: 'La porta 8883 non è raggiungibile. La stampante è spenta, ha un altro indirizzo IP oppure un firewall la blocca. Verifica l\'IP della stampante e che nulla blocchi la porta 8883.',
+      },
+      port_ftps: {
+        title: 'Porta trasferimento file (FTPS 990)',
+        pass: 'Raggiungibile — l\'invio dei file di stampa funzionerà.',
+        warn: 'La porta 990 non è raggiungibile. Il monitoraggio potrebbe ancora funzionare, ma l\'invio delle stampe alla stampante fallirà. Assicurati che la porta 990 non sia bloccata.',
+      },
+      port_rtsps: {
+        title: 'Porta fotocamera (RTSPS 322)',
+        pass: 'Raggiungibile — lo streaming della fotocamera funzionerà.',
+        warn: 'La porta 322 non è raggiungibile. La visualizzazione live della fotocamera non funzionerà. Questo non influisce sulla stampa.',
+      },
+      network_mode: {
+        title: 'Modalità di rete Docker',
+        pass: 'In esecuzione in modalità di rete host.',
+        warn: 'Bambuddy è in esecuzione con la rete Docker bridge. Il rilevamento delle stampanti e la stampante virtuale richiedono la modalità di rete host — ricrea il container con "network_mode: host".',
+        skip: 'Non in esecuzione in Docker — non applicabile.',
+      },
+      subnet: {
+        title: 'Sottorete',
+        pass: 'La stampante e Bambuddy sono nella stessa sottorete.',
+        warn: 'La stampante ({{printer_ip}}) e Bambuddy ({{host_ip}}) sono in sottoreti diverse. Potrebbero non raggiungersi a meno che non sia configurato il routing tra le sottoreti.',
+        skip: 'Impossibile determinare la sottorete — ignorato.',
+      },
+      mqtt_auth: {
+        title: 'Credenziali stampante',
+        pass: 'La stampante ha accettato la connessione.',
+        fail: 'La stampante è raggiungibile ma ha rifiutato la connessione. Il codice di accesso o il numero di serie è molto probabilmente errato. Il codice di accesso cambia ogni volta che la modalità sviluppatore viene attivata/disattivata — ricopialo dallo schermo della stampante.',
+        skip: 'Non verificato — impossibile raggiungere la stampante.',
+      },
+      developer_mode: {
+        title: 'Modalità sviluppatore LAN',
+        pass: 'La modalità sviluppatore è attivata.',
+        fail: 'La modalità sviluppatore è DISATTIVATA sulla stampante. Attivala nelle impostazioni LAN della stampante — e conferma con OK. Senza di essa le stampe non verranno avviate.',
+        skip: 'Impossibile verificare — richiede una connessione attiva alla stampante.',
+      },
+    },
+  },
+
   bugReport: {
     title: 'Segnala un bug',
     description: 'Descrizione',
@@ -5479,6 +5536,10 @@ export default {
     submitting: 'Invio segnalazione bug...',
     submitSuccess: 'Segnalazione bug inviata con successo!',
     submitFailed: 'Impossibile inviare la segnalazione bug',
+    diagnosticChecking: 'Verifica delle connessioni delle stampanti...',
+    diagnosticHealthy: 'Verifica della connessione superata — nessun problema rilevato sulle tue stampanti.',
+    diagnosticHeading: 'Possibile problema di configurazione rilevato',
+    diagnosticIntro: 'Una stampante ha un problema di connessione che potrebbe essere la causa del tuo problema. Controlla la soluzione qui sotto — risolverla potrebbe sistemare il problema senza una segnalazione di bug. Puoi comunque inviare una segnalazione qui sotto.',
     thankYou: 'Grazie!',
     submitted: 'La tua segnalazione bug è stata inviata.',
     viewIssue: 'Vedi issue',

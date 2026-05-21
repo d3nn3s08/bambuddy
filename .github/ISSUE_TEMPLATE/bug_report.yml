@@ -172,3 +172,5 @@ body:
           required: true
         - label: My printer has Developer Mode enabled
           required: true
+        - label: For a connection or printing problem, I ran the in-app Connection Diagnostic (printer card or System page) and included the result above
+          required: false

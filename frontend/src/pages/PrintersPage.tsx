@@ -69,6 +69,7 @@ import {
   LogOut,
   MoreHorizontal,
   SlidersHorizontal,
+  Stethoscope,
 } from 'lucide-react';
 
 import { useNavigate } from 'react-router-dom';
@@ -100,6 +101,7 @@ import { getGlobalTrayId, getFillBarColor, getSpoolmanFillLevel, getFallbackSpoo
 import { getPrinterImage, getWifiStrength, filterCompatibleQueueItems } from '../utils/printer';
 import { FilamentSlotCircle } from '../components/FilamentSlotCircle';
 import { Collapsible } from '../components/Collapsible';
+import { ConnectionDiagnosticModal } from '../components/ConnectionDiagnostic';
 import { getColorName, parseFilamentColor, isLightColor } from '../utils/colors';
 
 export interface SpoolmanSlotAssignmentRow {
@@ -1511,6 +1513,7 @@ function PrinterCard({
   const [showSkipObjectsModal, setShowSkipObjectsModal] = useState(false);
   const [showUploadForPrint, setShowUploadForPrint] = useState(false);
   const [showPrinterInfo, setShowPrinterInfo] = useState(false);
+  const [showDiagnostic, setShowDiagnostic] = useState(false);
   const closePrinterInfo = useCallback(() => setShowPrinterInfo(false), []);
   const [printAfterUpload, setPrintAfterUpload] = useState<{ id: number; filename: string } | null>(null);
   // AMS drying popover state: which AMS unit has the popover open
@@ -2591,6 +2594,16 @@ function PrinterCard({
                     {t('printers.mqttDebug')}
                   </button>
                   <button
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-bambu-dark-tertiary flex items-center gap-2"
+                    onClick={() => {
+                      setShowDiagnostic(true);
+                      setShowMenu(false);
+                    }}
+                  >
+                    <Stethoscope className="w-4 h-4" />
+                    {t('diagnostic.runButton')}
+                  </button>
+                  <button
                     className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 ${
                       hasPermission('printers:delete')
                         ? 'text-red-400 hover:bg-bambu-dark-tertiary'
@@ -2629,6 +2642,17 @@ function PrinterCard({
                 )}
                 {status?.connected ? t('printers.connection.connected') : t('printers.connection.offline')}
               </span>
+              {/* Run connection diagnostic — offered when the printer is offline */}
+              {!status?.connected && (
+                <button
+                  onClick={() => setShowDiagnostic(true)}
+                  className="flex items-center gap-1 px-2 py-1 rounded-full text-xs cursor-pointer bg-bambu-dark-tertiary text-bambu-gray hover:text-white transition-colors"
+                  title={t('diagnostic.runButton')}
+                >
+                  <Stethoscope className="w-3 h-3" />
+                  {t('diagnostic.runButton')}
+                </button>
+              )}
               {/* Network connection indicator */}
               {status?.connected && status?.wired_network && (
                 <span
@@ -4867,6 +4891,14 @@ function PrinterCard({
         />
       )}
 
+      {showDiagnostic && (
+        <ConnectionDiagnosticModal
+          printerId={printer.id}
+          printerName={printer.name}
+          onClose={() => setShowDiagnostic(false)}
+        />
+      )}
+
       {showPrinterInfo && (
         <PrinterInfoModal
           printer={printer}
@@ -5561,6 +5593,7 @@ function AddPrinterModal({
   const [detectedSubnets, setDetectedSubnets] = useState<string[]>([]);
   const [subnet, setSubnet] = useState('');
   const [scanProgress, setScanProgress] = useState({ scanned: 0, total: 0 });
+  const [showDiagnostic, setShowDiagnostic] = useState(false);
 
   // Fetch discovery info on mount
   useEffect(() => {
@@ -5683,6 +5716,7 @@ function AddPrinterModal({
   }, [onClose]);
 
   return (
+    <>
     <div
       className="fixed inset-0 bg-black/50 flex items-start sm:items-center justify-center z-50 p-4 overflow-y-auto"
       onClick={onClose}
@@ -5902,7 +5936,16 @@ function AddPrinterModal({
                 {t('printers.modal.autoArchiveLabel')}
               </label>
             </div>
-            <div className="flex gap-3 pt-4">
+            <button
+              type="button"
+              onClick={() => setShowDiagnostic(true)}
+              disabled={!form.ip_address.trim()}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-bambu-gray hover:text-white disabled:opacity-40 disabled:cursor-not-allowed border border-bambu-dark-tertiary rounded-lg transition-colors"
+            >
+              <Stethoscope className="w-4 h-4" />
+              {t('diagnostic.runButton')}
+            </button>
+            <div className="flex gap-3 pt-2">
               <Button type="button" variant="secondary" onClick={onClose} className="flex-1">
                 {t('common.cancel')}
               </Button>
@@ -5914,6 +5957,18 @@ function AddPrinterModal({
         </CardContent>
       </Card>
     </div>
+    {showDiagnostic && (
+      <ConnectionDiagnosticModal
+        connection={{
+          ip_address: form.ip_address.trim(),
+          serial_number: form.serial_number.trim() || undefined,
+          access_code: form.access_code || undefined,
+        }}
+        printerName={form.name || null}
+        onClose={() => setShowDiagnostic(false)}
+      />
+    )}
+    </>
   );
 }
 

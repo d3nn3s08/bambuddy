@@ -5455,6 +5455,63 @@ export default {
     },
   },
 
+  diagnostic: {
+    modalTitle: 'Diagnostic de connexion — {{name}}',
+    running: 'Diagnostic en cours...',
+    runFailed: 'Le diagnostic n\'a pas pu s\'exécuter : {{error}}',
+    retry: 'Relancer',
+    runButton: 'Lancer le diagnostic',
+    sectionTitle: 'Diagnostic de connexion',
+    sectionDescription: 'Vérifiez pourquoi une imprimante ne se connecte pas ou n\'imprime pas — accessibilité des ports, mode développeur LAN, mode réseau Docker et identifiants.',
+    noPrinters: 'Aucune imprimante configurée.',
+    overall: {
+      ok: 'Aucun problème détecté — la connexion de l\'imprimante semble correcte.',
+      warnings: 'L\'imprimante devrait fonctionner, mais certains points nécessitent votre attention.',
+      problems: 'Des problèmes expliquant pourquoi l\'imprimante ne se connecte pas ou n\'imprime pas ont été détectés.',
+    },
+    check: {
+      port_mqtt: {
+        title: 'Port de contrôle (MQTT 8883)',
+        pass: 'Accessible — l\'imprimante accepte les connexions de contrôle.',
+        fail: 'Le port 8883 est inaccessible. L\'imprimante est éteinte, possède une autre adresse IP, ou un pare-feu la bloque. Vérifiez l\'IP de l\'imprimante et qu\'aucun élément ne bloque le port 8883.',
+      },
+      port_ftps: {
+        title: 'Port de transfert de fichiers (FTPS 990)',
+        pass: 'Accessible — l\'envoi de fichiers d\'impression fonctionnera.',
+        warn: 'Le port 990 est inaccessible. La surveillance peut toujours fonctionner, mais l\'envoi d\'impressions vers l\'imprimante échouera. Assurez-vous que le port 990 n\'est pas bloqué.',
+      },
+      port_rtsps: {
+        title: 'Port caméra (RTSPS 322)',
+        pass: 'Accessible — le flux de la caméra fonctionnera.',
+        warn: 'Le port 322 est inaccessible. La vue caméra en direct ne fonctionnera pas. Cela n\'affecte pas l\'impression.',
+      },
+      network_mode: {
+        title: 'Mode réseau Docker',
+        pass: 'Fonctionne en mode réseau host.',
+        warn: 'Bambuddy fonctionne en réseau Docker bridge. La découverte d\'imprimantes et l\'imprimante virtuelle nécessitent le mode réseau host — recréez le conteneur avec "network_mode: host".',
+        skip: 'Ne fonctionne pas dans Docker — non applicable.',
+      },
+      subnet: {
+        title: 'Sous-réseau',
+        pass: 'L\'imprimante et Bambuddy sont sur le même sous-réseau.',
+        warn: 'L\'imprimante ({{printer_ip}}) et Bambuddy ({{host_ip}}) sont sur des sous-réseaux différents. Ils peuvent ne pas se joindre, sauf si un routage entre les sous-réseaux est configuré.',
+        skip: 'Le sous-réseau n\'a pas pu être déterminé — ignoré.',
+      },
+      mqtt_auth: {
+        title: 'Identifiants de l\'imprimante',
+        pass: 'L\'imprimante a accepté la connexion.',
+        fail: 'L\'imprimante est accessible mais a refusé la connexion. Le code d\'accès ou le numéro de série est très probablement incorrect. Le code d\'accès change chaque fois que le mode développeur est activé/désactivé — recopiez-le depuis l\'écran de l\'imprimante.',
+        skip: 'Non vérifié — l\'imprimante n\'a pas pu être jointe.',
+      },
+      developer_mode: {
+        title: 'Mode développeur LAN',
+        pass: 'Le mode développeur est activé.',
+        fail: 'Le mode développeur est DÉSACTIVÉ sur l\'imprimante. Activez-le dans les paramètres LAN de l\'imprimante — et confirmez avec OK. Sans lui, les impressions ne démarreront pas.',
+        skip: 'Impossible à vérifier — nécessite une connexion active à l\'imprimante.',
+      },
+    },
+  },
+
   bugReport: {
     title: 'Signaler un bug',
     description: 'Description',
@@ -5480,6 +5537,10 @@ export default {
     submitting: 'Envoi du rapport de bug...',
     submitSuccess: 'Rapport de bug envoyé avec succès !',
     submitFailed: 'Échec de l\'envoi du rapport de bug',
+    diagnosticChecking: 'Vérification des connexions des imprimantes...',
+    diagnosticHealthy: 'Vérification de connexion réussie — aucun problème détecté sur vos imprimantes.',
+    diagnosticHeading: 'Problème de configuration possible détecté',
+    diagnosticIntro: 'Une imprimante a un problème de connexion qui pourrait être à l\'origine de votre problème. Consultez la solution ci-dessous — la résoudre pourrait régler le problème sans rapport de bug. Vous pouvez tout de même envoyer un rapport ci-dessous.',
     thankYou: 'Merci !',
     submitted: 'Votre rapport de bug a été soumis.',
     viewIssue: 'Voir l\'issue',

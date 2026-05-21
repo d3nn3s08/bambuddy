@@ -5453,6 +5453,63 @@ export default {
     },
   },
 
+  diagnostic: {
+    modalTitle: '连接诊断 — {{name}}',
+    running: '正在运行诊断...',
+    runFailed: '无法运行诊断：{{error}}',
+    retry: '重新运行',
+    runButton: '运行诊断',
+    sectionTitle: '连接诊断',
+    sectionDescription: '检查打印机无法连接或无法打印的原因 — 端口可达性、LAN 开发者模式、Docker 网络模式和凭据。',
+    noPrinters: '未配置打印机。',
+    overall: {
+      ok: '未发现问题 — 打印机连接看起来正常。',
+      warnings: '打印机应该可以工作，但有些事项需要注意。',
+      problems: '发现了可解释打印机无法连接或无法打印的问题。',
+    },
+    check: {
+      port_mqtt: {
+        title: '控制端口（MQTT 8883）',
+        pass: '可达 — 打印机正在接受控制连接。',
+        fail: '端口 8883 不可达。打印机已关机、IP 地址不同，或被防火墙阻止。请核实打印机 IP，并确保没有任何东西阻止端口 8883。',
+      },
+      port_ftps: {
+        title: '文件传输端口（FTPS 990）',
+        pass: '可达 — 发送打印文件将正常工作。',
+        warn: '端口 990 不可达。监控可能仍然有效，但向打印机发送打印任务将失败。请确保端口 990 未被阻止。',
+      },
+      port_rtsps: {
+        title: '摄像头端口（RTSPS 322）',
+        pass: '可达 — 摄像头视频流将正常工作。',
+        warn: '端口 322 不可达。实时摄像头视图将无法工作。这不影响打印。',
+      },
+      network_mode: {
+        title: 'Docker 网络模式',
+        pass: '正在以 host 网络模式运行。',
+        warn: 'Bambuddy 正在以 Docker bridge 网络运行。打印机发现和虚拟打印机需要 host 网络模式 — 请使用 "network_mode: host" 重新创建容器。',
+        skip: '未在 Docker 中运行 — 不适用。',
+      },
+      subnet: {
+        title: '网络子网',
+        pass: '打印机和 Bambuddy 位于同一子网。',
+        warn: '打印机（{{printer_ip}}）和 Bambuddy（{{host_ip}}）位于不同的子网。除非配置了子网之间的路由，否则它们可能无法相互访问。',
+        skip: '无法确定子网 — 已跳过。',
+      },
+      mqtt_auth: {
+        title: '打印机凭据',
+        pass: '打印机已接受连接。',
+        fail: '打印机可达，但拒绝了连接。访问代码或序列号很可能有误。每次切换开发者模式时访问代码都会更改 — 请从打印机屏幕重新复制。',
+        skip: '未检查 — 无法连接到打印机。',
+      },
+      developer_mode: {
+        title: 'LAN 开发者模式',
+        pass: '开发者模式已启用。',
+        fail: '打印机上的开发者模式已关闭。请在打印机的 LAN 设置中启用它 — 并按 OK 确认。否则打印将无法开始。',
+        skip: '无法检查 — 需要与打印机的实时连接。',
+      },
+    },
+  },
+
   bugReport: {
     title: '报告错误',
     description: '描述',
@@ -5478,6 +5535,10 @@ export default {
     submitting: '正在提交错误报告...',
     submitSuccess: '错误报告提交成功！',
     submitFailed: '提交错误报告失败',
+    diagnosticChecking: '正在检查打印机连接...',
+    diagnosticHealthy: '连接检查通过 — 未在您的打印机上发现问题。',
+    diagnosticHeading: '检测到可能的设置问题',
+    diagnosticIntro: '某台打印机存在连接问题，可能正是您遇到问题的原因。请查看下方的解决方法 — 解决它也许无需提交错误报告即可解决问题。您仍然可以在下方提交报告。',
     thankYou: '谢谢！',
     submitted: '您的错误报告已提交。',
     viewIssue: '查看Issue',

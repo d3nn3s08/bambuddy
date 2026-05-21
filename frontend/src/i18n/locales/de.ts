@@ -5465,6 +5465,63 @@ export default {
     },
   },
 
+  diagnostic: {
+    modalTitle: 'Verbindungsdiagnose — {{name}}',
+    running: 'Diagnose läuft...',
+    runFailed: 'Diagnose konnte nicht ausgeführt werden: {{error}}',
+    retry: 'Erneut ausführen',
+    runButton: 'Diagnose ausführen',
+    sectionTitle: 'Verbindungsdiagnose',
+    sectionDescription: 'Prüfen, warum ein Drucker keine Verbindung herstellt oder nicht druckt — Port-Erreichbarkeit, LAN-Entwicklermodus, Docker-Netzwerkmodus und Zugangsdaten.',
+    noPrinters: 'Keine Drucker konfiguriert.',
+    overall: {
+      ok: 'Keine Probleme gefunden — die Druckerverbindung sieht gut aus.',
+      warnings: 'Der Drucker sollte funktionieren, aber einige Punkte erfordern Aufmerksamkeit.',
+      problems: 'Probleme gefunden, die erklären, warum der Drucker keine Verbindung herstellt oder nicht druckt.',
+    },
+    check: {
+      port_mqtt: {
+        title: 'Steuerungsport (MQTT 8883)',
+        pass: 'Erreichbar — der Drucker akzeptiert Steuerungsverbindungen.',
+        fail: 'Port 8883 ist nicht erreichbar. Der Drucker ist ausgeschaltet, hat eine andere IP-Adresse oder eine Firewall blockiert ihn. Überprüfen Sie die Drucker-IP und dass nichts Port 8883 blockiert.',
+      },
+      port_ftps: {
+        title: 'Dateiübertragungsport (FTPS 990)',
+        pass: 'Erreichbar — das Senden von Druckdateien funktioniert.',
+        warn: 'Port 990 ist nicht erreichbar. Die Überwachung funktioniert möglicherweise weiterhin, aber das Senden von Drucken an den Drucker schlägt fehl. Stellen Sie sicher, dass Port 990 nicht blockiert ist.',
+      },
+      port_rtsps: {
+        title: 'Kameraport (RTSPS 322)',
+        pass: 'Erreichbar — der Kamerastream funktioniert.',
+        warn: 'Port 322 ist nicht erreichbar. Die Live-Kameraansicht funktioniert nicht. Dies betrifft das Drucken nicht.',
+      },
+      network_mode: {
+        title: 'Docker-Netzwerkmodus',
+        pass: 'Läuft im Host-Netzwerkmodus.',
+        warn: 'Bambuddy läuft im Docker-Bridge-Netzwerkmodus. Die Druckererkennung und der virtuelle Drucker benötigen den Host-Netzwerkmodus — erstellen Sie den Container mit "network_mode: host" neu.',
+        skip: 'Läuft nicht in Docker — nicht zutreffend.',
+      },
+      subnet: {
+        title: 'Netzwerk-Subnetz',
+        pass: 'Drucker und Bambuddy befinden sich im selben Subnetz.',
+        warn: 'Der Drucker ({{printer_ip}}) und Bambuddy ({{host_ip}}) befinden sich in unterschiedlichen Subnetzen. Sie können sich möglicherweise nicht erreichen, sofern kein Routing zwischen den Subnetzen konfiguriert ist.',
+        skip: 'Subnetz konnte nicht ermittelt werden — übersprungen.',
+      },
+      mqtt_auth: {
+        title: 'Drucker-Zugangsdaten',
+        pass: 'Der Drucker hat die Verbindung akzeptiert.',
+        fail: 'Der Drucker ist erreichbar, hat die Verbindung aber abgelehnt. Der Zugangscode oder die Seriennummer ist höchstwahrscheinlich falsch. Der Zugangscode ändert sich bei jedem Umschalten des Entwicklermodus — kopieren Sie ihn erneut vom Druckerbildschirm.',
+        skip: 'Nicht geprüft — der Drucker konnte nicht erreicht werden.',
+      },
+      developer_mode: {
+        title: 'LAN-Entwicklermodus',
+        pass: 'Der Entwicklermodus ist aktiviert.',
+        fail: 'Der Entwicklermodus ist am Drucker AUS. Aktivieren Sie ihn in den LAN-Einstellungen des Druckers — und bestätigen Sie mit OK. Ohne ihn starten Drucke nicht.',
+        skip: 'Konnte nicht geprüft werden — erfordert eine aktive Verbindung zum Drucker.',
+      },
+    },
+  },
+
   bugReport: {
     title: 'Fehler melden',
     description: 'Beschreibung',
@@ -5490,6 +5547,10 @@ export default {
     submitting: 'Fehlerbericht wird gesendet...',
     submitSuccess: 'Fehlerbericht erfolgreich gesendet!',
     submitFailed: 'Fehlerbericht konnte nicht gesendet werden',
+    diagnosticChecking: 'Druckerverbindungen werden geprüft...',
+    diagnosticHealthy: 'Verbindungsprüfung bestanden — keine Probleme an Ihren Druckern gefunden.',
+    diagnosticHeading: 'Mögliches Konfigurationsproblem erkannt',
+    diagnosticIntro: 'Ein Drucker hat ein Verbindungsproblem, das die Ursache Ihres Problems sein könnte. Prüfen Sie die Lösung unten — sie zu beheben könnte das Problem ohne Fehlerbericht lösen. Sie können unten dennoch einen Bericht senden.',
     thankYou: 'Vielen Dank!',
     submitted: 'Ihr Fehlerbericht wurde eingereicht.',
     viewIssue: 'Issue ansehen',

@@ -5453,6 +5453,63 @@ export default {
     },
   },
 
+  diagnostic: {
+    modalTitle: '連線診斷 — {{name}}',
+    running: '正在執行診斷...',
+    runFailed: '無法執行診斷：{{error}}',
+    retry: '重新執行',
+    runButton: '執行診斷',
+    sectionTitle: '連線診斷',
+    sectionDescription: '檢查印表機無法連線或無法列印的原因 — 連接埠可達性、LAN 開發者模式、Docker 網路模式與認證資訊。',
+    noPrinters: '未設定印表機。',
+    overall: {
+      ok: '未發現問題 — 印表機連線看起來正常。',
+      warnings: '印表機應該可以運作，但有些項目需要注意。',
+      problems: '發現了可解釋印表機無法連線或無法列印的問題。',
+    },
+    check: {
+      port_mqtt: {
+        title: '控制連接埠（MQTT 8883）',
+        pass: '可達 — 印表機正在接受控制連線。',
+        fail: '連接埠 8883 無法連線。印表機已關機、IP 位址不同，或被防火牆封鎖。請核實印表機 IP，並確保沒有任何東西封鎖連接埠 8883。',
+      },
+      port_ftps: {
+        title: '檔案傳輸連接埠（FTPS 990）',
+        pass: '可達 — 傳送列印檔案將正常運作。',
+        warn: '連接埠 990 無法連線。監控可能仍然有效，但向印表機傳送列印工作將失敗。請確保連接埠 990 未被封鎖。',
+      },
+      port_rtsps: {
+        title: '攝影機連接埠（RTSPS 322）',
+        pass: '可達 — 攝影機串流將正常運作。',
+        warn: '連接埠 322 無法連線。即時攝影機檢視將無法運作。這不影響列印。',
+      },
+      network_mode: {
+        title: 'Docker 網路模式',
+        pass: '正在以 host 網路模式執行。',
+        warn: 'Bambuddy 正在以 Docker bridge 網路執行。印表機探索與虛擬印表機需要 host 網路模式 — 請使用 "network_mode: host" 重新建立容器。',
+        skip: '未在 Docker 中執行 — 不適用。',
+      },
+      subnet: {
+        title: '網路子網路',
+        pass: '印表機與 Bambuddy 位於同一子網路。',
+        warn: '印表機（{{printer_ip}}）與 Bambuddy（{{host_ip}}）位於不同的子網路。除非設定了子網路之間的路由，否則它們可能無法互相連線。',
+        skip: '無法判定子網路 — 已略過。',
+      },
+      mqtt_auth: {
+        title: '印表機認證資訊',
+        pass: '印表機已接受連線。',
+        fail: '印表機可達，但拒絕了連線。存取碼或序號很可能有誤。每次切換開發者模式時存取碼都會變更 — 請從印表機螢幕重新複製。',
+        skip: '未檢查 — 無法連線到印表機。',
+      },
+      developer_mode: {
+        title: 'LAN 開發者模式',
+        pass: '開發者模式已啟用。',
+        fail: '印表機上的開發者模式已關閉。請在印表機的 LAN 設定中啟用它 — 並按 OK 確認。否則列印將無法開始。',
+        skip: '無法檢查 — 需要與印表機的即時連線。',
+      },
+    },
+  },
+
   bugReport: {
     title: '報告錯誤',
     description: '描述',
@@ -5478,6 +5535,10 @@ export default {
     submitting: '正在提交錯誤報告...',
     submitSuccess: '錯誤報告提交成功！',
     submitFailed: '提交錯誤報告失敗',
+    diagnosticChecking: '正在檢查印表機連線...',
+    diagnosticHealthy: '連線檢查通過 — 未在您的印表機上發現問題。',
+    diagnosticHeading: '偵測到可能的設定問題',
+    diagnosticIntro: '某台印表機存在連線問題，可能正是您遇到問題的原因。請查看下方的解決方法 — 解決它也許無需提交錯誤報告即可解決問題。您仍然可以在下方提交報告。',
     thankYou: '謝謝！',
     submitted: '您的錯誤報告已提交。',
     viewIssue: '檢視 Issue',
