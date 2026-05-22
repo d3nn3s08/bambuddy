@@ -26,6 +26,8 @@ export default {
     switchToDark: 'Passa a tema scuro',
     smartSwitches: 'Interruttori Smart',
     logout: 'Esci',
+    installApp: 'Installa app',
+    installAppSuccess: 'Bambuddy è stato installato',
   },
 
   // Common

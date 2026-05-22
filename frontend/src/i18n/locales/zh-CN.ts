@@ -26,6 +26,8 @@ export default {
     switchToDark: '切换到深色模式',
     smartSwitches: '智能开关',
     logout: '退出登录',
+    installApp: '安装应用',
+    installAppSuccess: 'Bambuddy 已安装',
   },
 
   // Common

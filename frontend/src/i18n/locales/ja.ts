@@ -26,6 +26,8 @@ export default {
     switchToDark: 'ダークモードに切替',
     smartSwitches: 'スマートスイッチ',
     logout: 'ログアウト',
+    installApp: 'アプリをインストール',
+    installAppSuccess: 'Bambuddyをインストールしました',
   },
 
   // Common

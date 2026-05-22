@@ -4,6 +4,7 @@ import { Printer, Archive, ListOrdered, BarChart3, Cloud, Settings, Sun, Moon, C
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../contexts/ThemeContext';
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal';
+import { InstallAppButton } from './InstallAppButton';
 import { SwitchbarPopover } from './SwitchbarPopover';
 import { useQuery, useQueries } from '@tanstack/react-query';
 import { api, supportApi, pendingUploadsApi, type Permission } from '../api/client';
@@ -732,6 +733,7 @@ export function Layout() {
                     <Info className="w-5 h-5" />
                   </span>
                 )}
+                <InstallAppButton />
                 <a
                   href="https://github.com/maziggy/bambuddy"
                   target="_blank"
@@ -836,6 +838,7 @@ export function Layout() {
                   <Info className="w-5 h-5" />
                 </span>
               )}
+              <InstallAppButton />
               <a
                 href="https://github.com/maziggy/bambuddy"
                 target="_blank"

@@ -26,6 +26,8 @@ export default {
     switchToDark: 'Switch to dark mode',
     smartSwitches: 'Smart Switches',
     logout: 'Logout',
+    installApp: 'Install app',
+    installAppSuccess: 'Bambuddy was installed',
   },
 
   // Common
