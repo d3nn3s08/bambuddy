@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { WLEDSettings } from '../../components/WLEDSettings';
@@ -86,6 +86,31 @@ describe('WLEDSettings', () => {
     expect(printing).toBeDisabled();
     expect(printing).toHaveValue('99');
     expect(timeout).toHaveValue(120);
+  });
+
+  it('loads presets automatically for a saved enabled configuration', async () => {
+    let requests = 0;
+    server.use(
+      http.get('/api/v1/printers/', () => HttpResponse.json([{
+        ...printer,
+        wled_config: { ...printer.wled_config, enabled: true },
+      }])),
+      http.post('/api/v1/printers/1/wled/presets', () => {
+        requests += 1;
+        return HttpResponse.json([
+          { id: 1, name: 'Idle White' },
+          { id: 9, name: 'Finished Green' },
+          { id: 99, name: 'Printing Blue' },
+        ]);
+      }),
+    );
+    render(<WLEDSettings />);
+
+    expect(await screen.findByText('3 presets loaded')).toBeInTheDocument();
+    const printing = screen.getByLabelText('Printing');
+    expect(printing).toHaveValue('99');
+    expect(within(printing).getByRole('option', { name: 'Printing Blue (99)' })).toBeInTheDocument();
+    expect(requests).toBe(1);
   });
 
   it('edits and saves enabled, URL, preset and finished timeout', async () => {

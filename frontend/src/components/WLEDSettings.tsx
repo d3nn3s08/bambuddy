@@ -85,7 +85,7 @@ export function WLEDSettings() {
   });
 
   const presetsMutation = useMutation({
-    mutationFn: () => api.getWledPresets(printerId!, config.base_url?.trim() ?? ''),
+    mutationFn: (baseUrl: string) => api.getWledPresets(printerId!, baseUrl),
     onSuccess: (loaded) => {
       setPresets(loaded);
       setPresetState('online');
@@ -95,6 +95,13 @@ export function WLEDSettings() {
       showToast(t('wled.offlineHint'), 'error');
     },
   });
+
+  const loadPresets = presetsMutation.mutate;
+
+  useEffect(() => {
+    const savedConfig = printer?.wled_config;
+    if (savedConfig?.enabled && savedConfig.base_url) loadPresets(savedConfig.base_url);
+  }, [printer, loadPresets]);
 
   const connectionMutation = useMutation({
     mutationFn: () => api.testWledConnection(printerId!, config.base_url?.trim() ?? ''),
@@ -197,7 +204,7 @@ export function WLEDSettings() {
                     </Button>
                     <Button
                       variant="secondary"
-                      onClick={() => presetsMutation.mutate()}
+                      onClick={() => presetsMutation.mutate(config.base_url?.trim() ?? '')}
                       disabled={!config.base_url?.trim() || presetsMutation.isPending}
                     >
                       {presetsMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
