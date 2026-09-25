@@ -69,6 +69,7 @@ describe('WLEDSettings', () => {
     expect(url).toBeDisabled();
     expect(printing).toBeDisabled();
     expect(printing).toHaveValue('99');
+    expect(screen.getByText(/During runtime, Bambuddy only activates the configured preset/)).toBeInTheDocument();
     expect(timeout).toBeDisabled();
     expect(timeout).toHaveValue(120);
 
