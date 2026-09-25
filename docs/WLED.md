@@ -1,6 +1,6 @@
 # WLED-Preset-Integration
 
-Die optionale WLED-Integration ordnet den Zuständen eines einzelnen Druckers vorhandene WLED-Presets zu. Farben, Effekte, Paletten, Segmente und Playlists werden ausschließlich in WLED erstellt und gepflegt. Bambuddy speichert nur die numerische Preset-ID.
+Die optionale WLED-Integration ordnet den Zuständen eines Druckers vorhandene WLED-Presets zu. Farben, Effekte, Paletten, Segmentaufteilung und Playlists werden ausschließlich in WLED erstellt und gepflegt. Bambuddy speichert nur die numerische Preset-ID.
 
 ## Voraussetzungen
 
@@ -13,10 +13,11 @@ Für die direkte Integration sind keine Bambuddy-API-Zugangsdaten und keine sepa
 ## Einrichtung
 
 1. Unter **Einstellungen → WLED** den gewünschten Drucker auswählen.
-2. Die WLED-URL eintragen und **Presets laden** wählen.
-3. Jedem gewünschten Druckerstatus ein vorhandenes Preset zuordnen.
-4. Nicht benötigte Zuordnungen auf **Deaktiviert – kein Preset** lassen.
-5. Die Integration aktivieren und speichern.
+2. Die WLED-URL eintragen und die Verbindung testen.
+3. Für gemeinsam genutzte WLED-Geräte jedes Preset direkt in WLED nur mit dem vorgesehenen Zielsegment und aktivierter Option **Checked segments only** speichern. Andere Segmente dürfen nicht Teil des Presets sein – auch nicht mit `"on": false`, da WLED sie sonst beim Laden ausschaltet.
+4. Jedem gewünschten Druckerstatus ein vorhandenes Preset zuordnen.
+5. Nicht benötigte Zuordnungen auf **Deaktiviert – kein Preset** lassen.
+6. Die Integration aktivieren und speichern.
 
 Die Preset-Liste wird nur auf Anforderung geladen. Ist WLED nicht erreichbar oder wurde ein Preset dort später gelöscht, bleibt eine bereits gespeicherte ID erhalten und wird in der Oberfläche als derzeit nicht verfügbar angezeigt.
 
@@ -43,7 +44,9 @@ Ein optionaler Timeout kann nach dem Finished-Preset automatisch das konfigurier
 
 ## Netzwerk- und Fehlerverhalten
 
-Bambuddy aktiviert ein Preset asynchron über WLEDs `POST /json/state` mit `{"ps": <ID>}`. Die Preset-Namen werden lesend über `/presets.json` abgefragt. Kurze Netzwerk-Timeouts verhindern, dass ein nicht erreichbares WLED-Gerät Ressourcen bindet.
+Bambuddy aktiviert ein Preset asynchron über WLEDs `POST /json/state` und sendet ausschließlich `{"ps": <ID>}`. Die Segmentisolierung ergibt sich aus dem Inhalt des in WLED angelegten Presets; Bambuddy übermittelt zur Laufzeit keine Segment-ID. Dieses Verhalten wurde mit WLED 16.0.0 verifiziert. Der alternative Aufruf `{"seg": [{"id": <SEGMENT-ID>, "ps": <ID>}]}` wurde dort zwar akzeptiert, aber ignoriert.
+
+Die Preset-Namen werden lesend über `/presets.json` abgefragt. Kurze Netzwerk-Timeouts verhindern, dass ein nicht erreichbares WLED-Gerät Ressourcen bindet.
 
 WLED ist eine reine Komfortintegration: Verbindungsfehler, HTTP-Fehler und ungültige Antworten werden protokolliert, beeinflussen aber weder die Druckerkommunikation noch Druckaufträge oder andere Bambuddy-Funktionen. Derselbe effektive Zielstatus wird pro Drucker nur einmal gesendet; Temperatur- und Telemetrie-Updates erzeugen keine wiederholten Preset-Aufrufe.
 
