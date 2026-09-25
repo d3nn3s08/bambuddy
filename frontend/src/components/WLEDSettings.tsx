@@ -236,6 +236,7 @@ export function WLEDSettings() {
                 </div>
               </CardHeader>
               <CardContent>
+                <p className="mb-4 text-xs text-bambu-gray">{t('wled.presetSegmentHint')}</p>
                 <fieldset
                   disabled={!config.enabled}
                   className={`space-y-5 transition-opacity ${config.enabled ? '' : 'opacity-60'}`}
