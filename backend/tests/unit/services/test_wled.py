@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 import httpx
 import pytest
@@ -131,7 +132,8 @@ async def test_get_info_returns_optional_wled_identity_and_rejects_invalid_respo
 
 
 @pytest.mark.asyncio
-async def test_send_preset_posts_expected_payload_and_handles_failures():
+async def test_send_preset_posts_expected_payload_and_handles_failures(caplog):
+    caplog.set_level(logging.INFO, logger="backend.app.services.wled")
     requests = []
 
     def handler(request: httpx.Request):
@@ -142,6 +144,10 @@ async def test_send_preset_posts_expected_payload_and_handles_failures():
     assert await manager.send_preset(1, "http://wled.local", 3) is True
     assert requests[0].url == httpx.URL("http://wled.local/json/state")
     assert requests[0].content == b'{"ps":3}'
+    assert (logging.INFO, "[WLED] Printer 1 state=manual -> preset=3") in [
+        (record.levelno, record.message) for record in caplog.records
+    ]
+    caplog.clear()
 
     for response in (httpx.Response(500), httpx.Response(200, text="bad")):
         failing, failing_client = _manager(lambda request, result=response: result)
@@ -150,7 +156,53 @@ async def test_send_preset_posts_expected_payload_and_handles_failures():
 
     offline, offline_client = _manager(lambda request: (_ for _ in ()).throw(httpx.ConnectError("offline")))
     assert await offline.send_preset(1, "http://wled.local", 3) is False
+    records = [record for record in caplog.records if record.name == "backend.app.services.wled"]
+    assert len(records) == 3
+    assert all(record.levelno == logging.WARNING and "preset=3 failed" in record.message for record in records)
+    assert all("wled.local" not in record.message for record in records)
     await offline_client.aclose()
+    await client.aclose()
+
+
+@pytest.mark.asyncio
+async def test_status_logging_follows_successful_sends_without_poll_duplicates(caplog):
+    caplog.set_level(logging.INFO, logger="backend.app.services.wled")
+    manager, client = _manager(lambda request: httpx.Response(200, json={"success": True}))
+    manager.configure_printer(
+        1,
+        {
+            "enabled": True,
+            "base_url": "http://wled.local",
+            "presets": {"printing": 32, "finished": 34, "queue_waiting": 36},
+        },
+    )
+    for state, awaiting in (("RUNNING", False), ("FINISH", False), ("FINISH", True)):
+        manager.handle_status(1, _state(state), awaiting_plate_clear=awaiting)
+        await asyncio.sleep(0)
+        manager.handle_status(1, _state(state), awaiting_plate_clear=awaiting)
+        await asyncio.sleep(0)
+    assert [
+        (record.levelno, record.message) for record in caplog.records if record.name == "backend.app.services.wled"
+    ] == [
+        (logging.INFO, "[WLED] Printer 1 state=printing -> preset=32"),
+        (logging.INFO, "[WLED] Printer 1 state=finished -> preset=34"),
+        (logging.INFO, "[WLED] Printer 1 state=queue_waiting -> preset=36"),
+    ]
+    await manager.shutdown()
+    await client.aclose()
+
+
+@pytest.mark.asyncio
+async def test_cancelled_preset_send_does_not_log_a_switch_or_failure(caplog):
+    caplog.set_level(logging.INFO, logger="backend.app.services.wled")
+
+    async def handler(request):
+        raise asyncio.CancelledError
+
+    manager, client = _manager(handler)
+    with pytest.raises(asyncio.CancelledError):
+        await manager.send_preset(1, "http://wled.local", 32, status="printing")
+    assert not [record for record in caplog.records if record.name == "backend.app.services.wled"]
     await client.aclose()
 
 
@@ -195,7 +247,8 @@ def test_invalid_persisted_config_is_treated_as_disabled():
 
 
 @pytest.mark.asyncio
-async def test_finished_timeout_sends_idle_and_new_status_cancels_it():
+async def test_finished_timeout_sends_idle_and_new_status_cancels_it(caplog):
+    caplog.set_level(logging.INFO, logger="backend.app.services.wled")
     sent = []
 
     def handler(request: httpx.Request):
@@ -217,6 +270,7 @@ async def test_finished_timeout_sends_idle_and_new_status_cancels_it():
     runtime = manager._runtime[1]
     await manager._finish_timeout(1, runtime.generation, "http://wled.local", 1, 0)
     assert [request.content for request in sent] == [b'{"ps":9}', b'{"ps":1}']
+    assert "[WLED] Printer 1 state=idle -> preset=1" in caplog.messages
 
     # Further FINISH telemetry must not reactivate the finished preset.
     manager.handle_status(1, _state("FINISH", progress=100))
