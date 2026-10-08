@@ -3,7 +3,7 @@ import asyncio
 import httpx
 import pytest
 
-from backend.app.services.bambu_mqtt import PrinterState
+from backend.app.services.bambu_mqtt import HMSError, PrinterState
 from backend.app.services.wled import WLEDManager, WLEDResponseError, effective_wled_status
 
 
@@ -28,9 +28,67 @@ def test_effective_status_uses_existing_bambuddy_states_and_priorities():
     assert effective_wled_status(_state("IDLE"), awaiting_plate_clear=True) == "queue_waiting"
     assert effective_wled_status(_state("PAUSE", ams_status_main=1)) == "filament_problem"
     assert effective_wled_status(_state("PAUSE", mc_print_sub_stage=3)) == "filament_problem"
-    assert effective_wled_status(_state("IDLE", hms_errors=[{"code": 1}])) == "hms_error"
+    fault = HMSError(code="0300_0008", attr=0x03000200, module=3, severity=1, description="Nozzle temperature abnormal")
+    assert effective_wled_status(_state("IDLE", hms_errors=[fault])) == "hms_error"
     assert effective_wled_status(_state("RUNNING", connected=False)) == "offline"
     assert effective_wled_status(_state("UNKNOWN")) is None
+
+
+@pytest.mark.parametrize(
+    ("state", "awaiting_plate_clear", "expected"),
+    [
+        ("FINISH", True, "queue_waiting"),
+        ("FAILED", True, "queue_waiting"),
+        ("IDLE", True, "queue_waiting"),
+        ("FINISH", False, "finished"),
+        ("FAILED", False, "error"),
+        ("RUNNING", True, "printing"),
+        ("PRINTING", True, "printing"),
+        ("PREPARE", True, "prepare"),
+        ("SLICING", True, "prepare"),
+        ("PAUSE", True, "paused"),
+        ("UNKNOWN", True, None),
+    ],
+)
+def test_plate_gate_precedes_only_idle_finished_and_error(state, awaiting_plate_clear, expected):
+    assert effective_wled_status(_state(state), awaiting_plate_clear=awaiting_plate_clear) == expected
+
+
+@pytest.mark.parametrize(
+    ("severity", "description", "actions", "full_code", "expected"),
+    [
+        (0, "Invalid level", ["OK_BUTTON"], "0500000000004038", "printing"),
+        (2, None, [], "0C0001000002001B", "printing"),
+        (3, "The top cover is open", [], "0300970000030001", "printing"),
+        (1, "Nozzle temperature abnormal", [], "0300020000010008", "hms_error"),
+        (2, "Filament fault", [], "0500060000020005", "hms_error"),
+        (3, None, ["OK_BUTTON"], "0300970000030001", "hms_error"),
+        (3, "Unable to start drying", [], "1880C003", "hms_error"),
+    ],
+)
+def test_hms_filter_matches_notifications(severity, description, actions, full_code, expected):
+    fault = HMSError(
+        code="fault", attr=0, module=0, severity=severity, description=description, actions=actions, full_code=full_code
+    )
+    assert effective_wled_status(_state("RUNNING", hms_errors=[fault])) == expected
+
+
+def test_specific_fault_priorities_are_preserved_with_plate_gate():
+    ignored = HMSError(code="ignored", attr=0, module=0, severity=0)
+    fault = HMSError(code="fault", attr=0, module=0, severity=2, description="Filament fault")
+    for state in ("RUNNING", "FINISH", "FAILED", "IDLE", "PAUSE"):
+        assert (
+            effective_wled_status(_state(state, hms_errors=[ignored, fault]), awaiting_plate_clear=True) == "hms_error"
+        )
+    for values in ({"ams_status_main": 1}, {"mc_print_sub_stage": 3}):
+        assert (
+            effective_wled_status(_state("PAUSE", hms_errors=[fault], **values), awaiting_plate_clear=True)
+            == "filament_problem"
+        )
+    assert (
+        effective_wled_status(_state("FINISH", connected=False, hms_errors=[fault]), awaiting_plate_clear=True)
+        == "offline"
+    )
 
 
 @pytest.mark.asyncio
