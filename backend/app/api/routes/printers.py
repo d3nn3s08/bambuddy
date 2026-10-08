@@ -230,7 +230,7 @@ async def create_printer(
 async def list_wled_presets(
     printer_id: int,
     request: WLEDPresetListRequest,
-    _=RequirePermissionIfAuthEnabled(Permission.PRINTERS_UPDATE),
+    _=RequirePrinterPermissionIfAuthEnabled(Permission.PRINTERS_UPDATE),
     db: AsyncSession = Depends(get_db),
 ):
     """Read existing presets from WLED without changing its configuration."""
@@ -248,7 +248,7 @@ async def list_wled_presets(
 async def test_wled_connection(
     printer_id: int,
     request: WLEDPresetListRequest,
-    _=RequirePermissionIfAuthEnabled(Permission.PRINTERS_UPDATE),
+    _=RequirePrinterPermissionIfAuthEnabled(Permission.PRINTERS_UPDATE),
     db: AsyncSession = Depends(get_db),
 ):
     """Check WLED connectivity and return its optional identity."""
@@ -266,7 +266,7 @@ async def test_wled_connection(
 async def test_wled_preset(
     printer_id: int,
     request: WLEDPresetTestRequest,
-    _=RequirePermissionIfAuthEnabled(Permission.PRINTERS_UPDATE),
+    _=RequirePrinterPermissionIfAuthEnabled(Permission.PRINTERS_UPDATE),
     db: AsyncSession = Depends(get_db),
 ):
     """Activate one validated preset without changing stored configuration."""

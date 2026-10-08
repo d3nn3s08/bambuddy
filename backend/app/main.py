@@ -115,6 +115,7 @@ from backend.app.services.camera_light import camera_light
 from backend.app.services.energy_plug import energy_plug_candidates, select_energy_reading
 from backend.app.services.github_backup import github_backup_service
 from backend.app.services.ha_sensor_manager import ha_sensor_manager
+from backend.app.services.hms_errors import hms_fault_counts as _hms_fault_counts
 from backend.app.services.homeassistant import homeassistant_service
 from backend.app.services.library_trash import library_trash_service
 from backend.app.services.local_backup import local_backup_service
@@ -1496,24 +1497,6 @@ def _hms_notify_key(error) -> str:
     if full_code:
         return full_code.upper()
     return f"{error.attr:08X}:{error.code}"
-
-
-def _hms_fault_counts(error) -> bool:
-    """Whether a fault counts as a problem: the same rule the frontend's
-    ``filterKnownHMSErrors`` applies to the printer card, badge and camera wall.
-
-    It counts when Bambu publishes text for it or it offers action buttons, and
-    its level is a real one. An ``hms[]`` fault at level 3 (notification) with
-    no actions does not count: those are things like "the top cover is open" or
-    "the chamber is hot, fan speed increased", which a printer can hold through
-    a whole print. A ``print_error`` at the same level (0xCxxx) still counts, as
-    it always has; those are prompts such as "unable to start drying" (#2728).
-    """
-    if error.severity < 1:
-        return False
-    has_actions = bool(getattr(error, "actions", None))
-    is_hms_notice = len(getattr(error, "full_code", "") or "") == 16 and error.severity == 3
-    return has_actions or (bool(getattr(error, "description", None)) and not is_hms_notice)
 
 
 def _hms_errors_to_notify(errors: list, new_error_codes: set[str]) -> list:

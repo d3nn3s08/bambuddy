@@ -9,6 +9,7 @@ import httpx
 from backend.app.core.tasks import spawn_background_task
 from backend.app.schemas.printer import WLEDConfig
 from backend.app.services.bambu_mqtt import PrinterState
+from backend.app.services.hms_errors import hms_fault_counts
 
 logger = logging.getLogger(__name__)
 
@@ -25,16 +26,16 @@ def effective_wled_status(state: PrinterState, *, awaiting_plate_clear: bool = F
     printer_state = (state.state or "").upper()
     if printer_state == "PAUSE" and (state.ams_status_main == 1 or state.mc_print_sub_stage not in (None, 0)):
         return "filament_problem"
-    if state.hms_errors:
+    if any(hms_fault_counts(error) for error in state.hms_errors):
         return "hms_error"
+    if awaiting_plate_clear and printer_state in {"IDLE", "FINISH", "FAILED"}:
+        return "queue_waiting"
     if printer_state == "FAILED":
         return "error"
     if printer_state == "PAUSE":
         return "paused"
     if printer_state == "FINISH":
         return "finished"
-    if awaiting_plate_clear and printer_state == "IDLE":
-        return "queue_waiting"
     if printer_state in {"RUNNING", "PRINTING"}:
         return "printing"
     if printer_state in {"PREPARE", "SLICING"}:
