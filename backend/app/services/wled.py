@@ -113,7 +113,7 @@ class WLEDManager:
         if preset_id is not None:
             self._cancel_task(runtime.send_task)
             runtime.send_task = spawn_background_task(
-                self.send_preset(printer_id, config.base_url, preset_id),
+                self.send_preset(printer_id, config.base_url, preset_id, status=status),
                 name=f"wled-preset-{printer_id}",
             )
 
@@ -129,24 +129,27 @@ class WLEDManager:
                 name=f"wled-finished-timeout-{printer_id}",
             )
 
-    async def send_preset(self, printer_id: int, base_url: str, preset_id: int) -> bool:
+    async def send_preset(self, printer_id: int, base_url: str, preset_id: int, *, status: str | None = None) -> bool:
         """Activate a preset. Failures are isolated from all printer work."""
         try:
             response = await self.client.post(f"{base_url}/json/state", json={"ps": preset_id})
             response.raise_for_status()
             if not isinstance(response.json(), dict):
                 raise WLEDResponseError("state response must be a JSON object")
+            logger.info("[WLED] Printer %d state=%s -> preset=%d", printer_id, status or "manual", preset_id)
             return True
         except asyncio.CancelledError:
             raise
         except httpx.HTTPStatusError as exc:
             logger.warning(
-                "WLED preset request failed for printer %d with HTTP %d",
+                "[WLED] Printer %d state=%s -> preset=%d failed (HTTP %d)",
                 printer_id,
+                status or "manual",
+                preset_id,
                 exc.response.status_code,
             )
         except (httpx.HTTPError, ValueError):
-            logger.warning("WLED preset request failed for printer %d", printer_id)
+            logger.warning("[WLED] Printer %d state=%s -> preset=%d failed", printer_id, status or "manual", preset_id)
         return False
 
     async def list_presets(self, base_url: str) -> list[dict[str, int | str]]:
@@ -218,7 +221,7 @@ class WLEDManager:
             runtime = self._runtime.get(printer_id)
             if not runtime or runtime.generation != generation or runtime.status != "finished":
                 return
-            await self.send_preset(printer_id, base_url, idle_preset_id)
+            await self.send_preset(printer_id, base_url, idle_preset_id, status="idle")
         except asyncio.CancelledError:
             return
 
