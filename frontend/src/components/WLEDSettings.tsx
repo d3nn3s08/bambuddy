@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, Circle, Lightbulb, Loader2, Play, RefreshCw, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -55,6 +55,7 @@ export function WLEDSettings() {
   const queryClient = useQueryClient();
   const { data: printers = [], isLoading } = useQuery({ queryKey: ['printers'], queryFn: api.getPrinters });
   const [printerId, setPrinterId] = useState<number | null>(null);
+  const initializedPrinterId = useRef<number | null>(null);
   const [config, setConfig] = useState<WLEDConfig>(emptyConfig);
   const [presets, setPresets] = useState<WLEDPreset[]>([]);
   const [presetState, setPresetState] = useState<'idle' | 'online' | 'offline'>('idle');
@@ -67,6 +68,8 @@ export function WLEDSettings() {
   }, [printerId, printers]);
 
   useEffect(() => {
+    if (!printer || initializedPrinterId.current === printer.id) return;
+    initializedPrinterId.current = printer.id;
     setConfig(printer?.wled_config ? structuredClone(printer.wled_config) : emptyConfig());
     setPresets([]);
     setPresetState('idle');

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
+import { useQueryClient } from '@tanstack/react-query';
 import { WLEDSettings } from '../../components/WLEDSettings';
 import { render } from '../utils';
 import { server } from '../mocks/server';
@@ -44,7 +45,84 @@ const printer = {
   },
 };
 
+function RefetchableWLEDSettings() {
+  const queryClient = useQueryClient();
+  return <>
+    <button onClick={() => void queryClient.refetchQueries({ queryKey: ['printers'] })}>Refetch printers</button>
+    <WLEDSettings />
+  </>;
+}
+
 describe('WLEDSettings', () => {
+  it('keeps unsaved edits when the printers query refetches', async () => {
+    let requests = 0;
+    server.use(
+      http.get('/api/v1/printers/', () => {
+        requests += 1;
+        return HttpResponse.json([{
+          ...printer,
+          name: requests === 1 ? printer.name : 'Refetched printer',
+          wled_config: { ...printer.wled_config, enabled: true },
+        }]);
+      }),
+      http.post('/api/v1/printers/1/wled/presets', () =>
+        HttpResponse.json([{ id: 3, name: 'Printing Cyan' }]),
+      ),
+    );
+    render(<RefetchableWLEDSettings />);
+    await screen.findByText('1 presets loaded');
+    const url = screen.getByLabelText('WLED URL');
+    await userEvent.clear(url);
+    await userEvent.type(url, 'http://edited.local');
+    await userEvent.selectOptions(screen.getByLabelText('Printing'), '3');
+    await userEvent.clear(screen.getByLabelText('Finished timeout (seconds)'));
+    await userEvent.type(screen.getByLabelText('Finished timeout (seconds)'), '45');
+    await userEvent.click(screen.getByLabelText('Enable WLED integration'));
+    await userEvent.click(screen.getByRole('button', { name: 'Refetch printers' }));
+    await screen.findByRole('option', { name: 'Refetched printer' });
+
+    expect(requests).toBe(2);
+    expect(url).toHaveValue('http://edited.local');
+    expect(screen.getByLabelText('Enable WLED integration')).not.toBeChecked();
+    expect(screen.getByLabelText('Printing')).toHaveValue('3');
+    expect(screen.getByLabelText('Finished timeout (seconds)')).toHaveValue(45);
+  });
+
+  it('loads the selected printers saved configuration when the printer changes', async () => {
+    const second = {
+      ...printer,
+      id: 2,
+      name: 'A1 Mini',
+      wled_config: {
+        ...printer.wled_config,
+        enabled: true,
+        base_url: 'http://second.local',
+        presets: { ...printer.wled_config.presets, printing: 32 },
+        finished_timeout_seconds: 60,
+      },
+    };
+    server.use(
+      http.get('/api/v1/printers/', () => HttpResponse.json([printer, second])),
+      http.post('/api/v1/printers/2/wled/presets', () => HttpResponse.json([{ id: 32, name: 'Printing Cyan' }])),
+    );
+    render(<WLEDSettings />);
+    await screen.findByDisplayValue('http://wled.local');
+    await userEvent.click(screen.getByLabelText('Enable WLED integration'));
+    await userEvent.clear(screen.getByLabelText('WLED URL'));
+    await userEvent.type(screen.getByLabelText('WLED URL'), 'http://unsaved.local');
+    await userEvent.selectOptions(screen.getByLabelText('Printer'), '2');
+    await screen.findByDisplayValue('http://second.local');
+    expect(screen.getByLabelText('Enable WLED integration')).toBeChecked();
+    expect(screen.getByLabelText('Printing')).toHaveValue('32');
+    expect(screen.getByLabelText('Finished timeout (seconds)')).toHaveValue(60);
+
+    await userEvent.selectOptions(screen.getByLabelText('Printer'), '1');
+    await screen.findByDisplayValue('http://wled.local');
+    expect(screen.getByLabelText('Enable WLED integration')).not.toBeChecked();
+    expect(screen.getByLabelText('Printing')).toHaveValue('99');
+    expect(screen.getByLabelText('Finished timeout (seconds)')).toHaveValue(120);
+  });
+
   it('keeps the integration card and disabled toggle visible without printers', async () => {
     server.use(http.get('/api/v1/printers/', () => HttpResponse.json([])));
     render(<WLEDSettings />);
